@@ -1,0 +1,56 @@
+#include <iostream>
+#include <string>
+#include <openssl/sha.h> // To use OpenSSL for SHA-256 hashing
+#include <iomanip>       // For formatting the hashed output
+#include <sstream>       // For stringstream
+
+using namespace std;
+
+// Function to hash the password using SHA-256
+string sha256(const string& password) {
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, password.c_str(), password.size());
+    SHA256_Final(hash, &sha256);
+
+    stringstream ss;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        ss << hex << setw(2) << setfill('0') << (int)hash[i];
+    }
+    return ss.str();
+}
+
+// Function to add a salt to the password before hashing
+string addSalt(const string& password, const string& salt) {
+    return password + salt; // Append salt to password
+}
+
+int main() {
+    string password, salt = "randomSaltValue123!@#", hashedPassword, inputPassword;
+
+    // Registration: Hash and store the password with salt
+    cout << "Register - Enter your password: ";
+    cin >> password;
+
+    // Add salt to the password and hash it
+    hashedPassword = sha256(addSalt(password, salt));
+
+    cout << "Your password has been securely stored." << endl;
+
+    // Login: Verify the password by comparing hashes
+    cout << "\nLogin - Enter your password: ";
+    cin >> inputPassword;
+
+    // Hash the input password with the same salt
+    string hashedInputPassword = sha256(addSalt(inputPassword, salt));
+
+    // Check if the hashed input matches the stored hash
+    if (hashedInputPassword == hashedPassword) {
+        cout << "Access granted. Welcome!" << endl;
+    } else {
+        cout << "Access denied. Invalid password!" << endl;
+    }
+
+    return 0;
+}
